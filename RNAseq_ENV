@@ -1,0 +1,5 @@
+
+#!/bin/sh
+module load numpy
+module load scipy
+module load R_base 
