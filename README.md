@@ -6,13 +6,12 @@ Scripts used to run RNAseq pipelines on a cluster running SLURM
 
 #Quality Control (Trimmomatic)
 #Initial trimming and read checks for quality
-#parameters are bash viarbles that can be set inside of script or using flags. Recommend using flags
-#if altering default params
-run_Trimmomatic.sh
+#parameters are bash viarbles that can be set inside of script or using flags. Recommend using flags if altering default params
+run_trimmomatic_batch
 
 #alignment (Tophat2)
 #uses bowtie two and a indexed reference file. indexing needs to be done prior to running this step
-run_Tophat.sh
+run_Tophat_batch
 
 
 #Count tables (Python)
