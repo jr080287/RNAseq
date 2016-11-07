@@ -1,0 +1,139 @@
+#!/bin/bash
+
+
+#Craig Stanley
+#Aug 21, 2015
+#used to run trimmomatic (pre-proccessing QC) on all files in the directory using arguments 
+
+
+#check if there are any imput arguments, if not exit script with error message
+if (($# == 0)); then
+        echo "Must have a minimum of one input argument. Please see README for more information" >&2  
+fi
+
+#set up basic log file. Remove any old log files in current directory
+loglabel=$(date +%Y"-"%m"-"%d"-"%H"-"%M"-"%S)
+#echo $loglabel
+log="Trimmomatic-qc.$loglabel.log"
+touch $log
+#get input arguments
+echo "Files and Directories" >>$log
+
+#setting default params
+basedir=$PWD
+head=6
+leading=3
+trailing=3
+min=50
+threads=1 
+adapter="/home/tue39618/Programs/Trimmomatic-0.33/adapters/TruSeq3-PE-2.fa"
+while getopts ":b:t:s:L:T:M:H:Ah" opt; do
+  case $opt in
+    t)
+      echo "Threads: $OPTARG" >&2
+      threads=$OPTARG   
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      exit 1
+      ;;
+    s)
+      echo "Sample list : $OPTARG" >&2
+      SAMPLE=$OPTARG   
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      exit 1
+      ;;
+  :)
+      echo "Option -$OPTARG requires an argument." >&2
+      exit 1
+      ;;
+   	L)
+      echo "LEADING: $OPTARG" >&2
+      leading=$OPTARG   
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      exit 1
+      ;;
+    T)
+      echo "TRAILING: $OPTARG" >&2
+      trailing=$OPTARG   
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      exit 1
+      ;;
+    M)
+      echo "MINLEN: $OPTARG" >&2
+      min=$OPTARG   
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      exit 1
+      ;;   
+    H)
+      echo "HEADCROP: $OPTARG" >&2
+      trailing=$OPTARG   
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      exit 1
+      ;;
+    A)
+      echo "Adapter file: $OPTARG" >&2
+      adapter=$OPTARG   
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      exit 1
+      ;;  
+  	h)
+      echo " " >&1
+      echo "Command options (for a complete user guide see README):"
+      echo " " >&1
+      echo "  -b <basedirectory>        This is the base directory where all files will be stored" >&1
+      echo "  -t <numberic value>       Number of CPUs (threads
+if multithreading avaliable)"
+      echo "  -q <numeric value>	The minimum qulity score to be used" >&1
+      echo "  -n                        Write all output to stderr and stdout" >&1
+      echo "  -v                        Display version" >&1
+      echo " " >&1
+        
+      exit 1
+      ;;
+    \?) 
+      echo "Invalidoption -$OPTARG" >&2
+      ;;
+  
+  esac
+done
+
+echo -e "\tSample: $SAMPLE" >>$log
+echo -e "\tBase directory: $basedir" >>$log
+echo -e "\tThreads: $threads" >>$log
+echo -e "\tAdapter file: $adapter" >>$log
+echo -e "\n\n" >>$log
+
+
+#read sample
+
+file=$(basename $SAMPLE)
+directory=$(dirname $SAMPLE)
+
+#cd $basedir
+i=$file
+echo "Processing "$i"_R1_001.fastq and "$i"_R2_001.fastq" >&2
+echo "Processing "$i"_R1_001.fastq and "$i"_2R_001.fastq" >>$log
+echo -e "Command:\njava -jar
+/home/tue39618/Programs/Trimmomatic-0.33/trimmomatic-0.33.jar PE
+-phred33 -threads $threads --trimlog $i.trimlog $i\_R1_001.fastq $i\_R2_002.fastq $i/_R1_001.trimmed.fastq $i\_R1_001.trimmed.unpaired.fastq $i\_R2_001.trimmed.fastq $i\_R2_001.trimmed.unpaired.fastq ILLUMINACLIP:adapters/TruSeq3-PE-2.fa:2:30:10 HEADCROP:$head LEADING:$leading TRAILING:$trailing SLIDINGWINDOW:4:20 MINLEN:$min" >>$log
+echo -e "\n" >>$log;
+java -jar /home/tue39618/Programs/Trimmomatic-0.33/trimmomatic-0.33.jar PE -phred33 -threads $threads -trimlog $i.trimlog $directory/$i\_R1_001.fastq.gz $directory/$i\_R2_001.fastq.gz $i\_R1_001.trimmed.fastq $i\_R1_001.trimmed.unpaired.fastq $i\_R2_001.trimmed.fastq $i\_R2_001.trimmed.unpaired.fastq ILLUMINACLIP:$adapter:2:30:10 HEADCROP:$head LEADING:$leading TRAILING:$trailing SLIDINGWINDOW:4:20 MINLEN:$min &>>$log
+echo -e "\n\n" >>$log;
+wait
+
+echo -e "Basic text for methods:" >>$log
+
+echo -e "Prior to alignment, removal of sequence adapters and filtering of low quality bases were carried out using Trimmomatic (Boldger et al. 2014) for each set of paired-end (PE) sequences. Parameters used in evaluating were, in order, ILLUMINACLIP:$adapters:2:30:10, HEADCROP:$head, LEADING:$LEADING, TRAILING:$trailing, SLIDINGWINDOW:4:20 MINLEN:$min" >>$log

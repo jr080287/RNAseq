@@ -1,0 +1,98 @@
+#!/bin/bash
+
+
+
+#used to run tophat on human RNAseq data (if not human, please adjust index file)
+
+#check if there are any imput arguments, if not exit script with error message
+if (($# == 0)); then
+        echo "Must have a minimum of two input arguments. Please see README for more information" >&2  
+fi
+
+#get input arguments
+
+
+
+
+#setting defualt parameters
+basedir=$PWD
+read_mismatches=3
+read_gap=3
+read_edit_dist=3
+realign_edit=0
+threads=1
+
+#get params from input
+while getopts "b:s:t:" opt; do
+  case $opt in
+    
+    t)
+      echo "Threads: $OPTARG" >&2
+      threads=$OPTARG
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      exit 1
+      ;;
+    s)
+      echo "Sample: $OPTARG" >&2
+      SAMPLE=$OPTARG   
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      exit 1
+      ;;
+  :)
+      echo "Option -$OPTARG requires an argument." >&2
+      exit 1
+      ;;
+  esac
+done
+
+
+file=$(basename $SAMPLE)
+directory=$(dirname $SAMPLE)
+echo -e "sample: $SAMPLE"
+echo $file
+
+#cd $directory
+#echo $directory
+#pwd
+#set up basic log file. Remove any old log files in current directory
+loglabel=$(date +%Y"-"%m"-"%d"-"%H"-"%M"-"%S)
+#echo $loglabel
+log="${file}.Tophat.${loglabel}.log"
+#echo $log
+touch $log
+
+echo  -e "File: $file" >>$log
+echo -e "$directory" >>$log
+#send final parameters to log_file
+echo "Files and Directories" >>$log
+echo -e "\tSample: $SAMPLE" >>$log
+echo -e "\tBase directory: $basedir\n" >>$log
+echo -e "\tThreads: $threads\n" >>$log
+echo -e "Tophat params:\n\tRead_mismatch: $read_mismatches\n\tRead_gap: $read_gap\n\tRead_edit_dist: $read_edit_dist\n\tRe-align_edit_distance: $realign_edit\n\tThreads: $threads\n\n" >>$log  
+
+i=$file
+echo "Processing "$i"_R1_001.trimmed and "$i"_R2_001.trimmed" >&2
+echo "Processing "$i"_R1_001.trimmed and "$i"_R2_001.trimmed" >>$log
+outputdir="$i_output"
+tmp_log="$i.tmplog"
+
+
+
+#echo $tmp_log
+#gunzip $i\_R1_001.trimmed.fastq.gz;
+#wait
+#gunzip $i\_R2_001.trimmed.fastq.gz;
+#wait
+
+  echo -e "Command:\n/usr/bin/time --format \"%E %F %K %M %P %S %U %W %e\" tophat -p $threads --read-mismatches $read_mismatches --read-gap-length $read_gap --read-edit-dis $read_edit_dist  --mate-inner-dist 200 --mate-std-dev 120 --read-realign-edit-dist $realign_edit -o ./$i\_tophat_output /home/weavers/bowties2indexes/genome  $i\_R1_001.trimmed.fastq  $i\_R2_001.trimmed.fastq 2>$tmp_log" >>$log
+
+  tophat2 -p $threads --read-mismatches $read_mismatches --read-gap-length $read_gap --read-edit-dis $read_edit_dist  --mate-inner-dist 200 --mate-std-dev 120 --read-realign-edit-dist $realign_edit -o ./$i\_tophat_output /home/tue39618/Programs/bowtie2indexes/genome $directory/$i\_R1_001.trimmed.fastq  $directory/$i\_R2_001.trimmed.fastq 2>$tmp_log
+
+  wait
+  local_time=$(tail -1 $tmp_log)
+  echo -e "Time output:$local_time\n\n" >>$log 
+#  rm $tmp_log
